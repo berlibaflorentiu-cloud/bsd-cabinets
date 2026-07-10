@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /quote-tool.html
+
+Sitemap: https://bsdcabinetry.com/sitemap.xml
