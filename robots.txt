@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /quote-tool.html
 
-Sitemap: https://bsdcabinetry.com/sitemap.xml
+Sitemap: https://bestsundan.com/sitemap.xml
