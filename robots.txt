@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /quote-tool.html
-Disallow: /catalog-tool.html
+Disallow: /pontaj.html
 
 Sitemap: https://bestsundan.com/sitemap.xml
