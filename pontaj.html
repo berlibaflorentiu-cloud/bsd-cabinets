@@ -1350,6 +1350,33 @@ const TIERS = [
     ).join('') + '</div>';
   }
 
+  // Rolling 24h of hourly buckets in Europe/Chișinău local time — reuses
+  // the already-fetched page (any day-range preset always includes the
+  // most recent 24h, since the query is newest-first with no upper time
+  // bound), so this needs no extra round trip to Supabase.
+  function _siteHourlyBuckets(data){
+    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Chisinau', hour12: false, hour: '2-digit', year: 'numeric', month: '2-digit', day: '2-digit' });
+    function hourKey(date){
+      const parts = fmt.formatToParts(date);
+      const get = (t) => parts.find(p => p.type === t).value;
+      return get('year') + '-' + get('month') + '-' + get('day') + ' ' + get('hour');
+    }
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - 24 * 3600 * 1000);
+    const order = [];
+    for (let i = 23; i >= 0; i--) order.push(hourKey(new Date(now.getTime() - i * 3600 * 1000)));
+    const counts = {};
+    order.forEach((k) => { counts[k] = 0; });
+    data.forEach((r) => {
+      const t = new Date(r.created_at);
+      if (t >= cutoff && t <= now) {
+        const k = hourKey(t);
+        if (k in counts) counts[k] += 1;
+      }
+    });
+    return { labels: order.map((k) => k.slice(-2) + ':00'), values: order.map((k) => counts[k]) };
+  }
+
   async function renderSiteStats(){
     const el = document.getElementById('site-stats-content');
     if (!el) return;
@@ -1387,6 +1414,7 @@ const TIERS = [
       byDay[d] = (byDay[d] || 0) + 1;
     });
     const dayKeys = Object.keys(byDay).sort().slice(-14);
+    const hourly = _siteHourlyBuckets(data);
 
     const topPages = _siteTopN(data, 'path', 8);
     const topRefs = _siteTopN(data.map(r => ({ refLabel: _siteReferrerLabel(r.referrer) })), 'refLabel', 6);
@@ -1412,6 +1440,12 @@ const TIERS = [
         '</div>' +
       '</div>' +
       '<div class="dash-charts">' +
+        '<div class="dash-chart-card" style="grid-column:1/-1">' +
+          '<div class="dash-chart-title">Activity by Hour (Last 24h)</div>' +
+          '<canvas id="chart-site-hourly" height="80"></canvas>' +
+        '</div>' +
+      '</div>' +
+      '<div class="dash-charts" style="margin-top:20px">' +
         '<div class="dash-chart-card">' +
           '<div class="dash-chart-title">Views Per Day</div>' +
           '<canvas id="chart-site-daily" height="200"></canvas>' +
@@ -1441,7 +1475,7 @@ const TIERS = [
         '</div>' +
       '</div>';
 
-    requestAnimationFrame(() => _initSiteCharts(dayKeys, byDay, topPages, topRefs));
+    requestAnimationFrame(() => _initSiteCharts(dayKeys, byDay, topPages, topRefs, hourly));
   }
 
   document.getElementById('site-stats-content').addEventListener('click', (e) => {
@@ -1450,12 +1484,21 @@ const TIERS = [
     setSiteStatsRange(Number(btn.dataset.days));
   });
 
-  function _initSiteCharts(dayKeys, byDay, topPages, topRefs){
+  function _initSiteCharts(dayKeys, byDay, topPages, topRefs, hourly){
     const GOLD = '#C8A552', GOLD_A = 'rgba(200,165,82,0.18)', MUTED = '#B9B7A8', GRID = 'rgba(216,181,109,.22)';
     // Chart.js mutates the scale config objects it's given, so each chart
     // needs its own fresh objects — never share/spread the same nested object.
     const axisStyle = (extra) => ({ grid: { color: GRID }, ticks: { color: MUTED, font: { family: 'IBM Plex Mono', size: 11 }, ...extra } });
     const legendOff = { plugins: { legend: { display: false } } };
+
+    const c0 = document.getElementById('chart-site-hourly');
+    if (c0 && window.Chart && hourly){
+      new Chart(c0, {
+        type: 'line',
+        data: { labels: hourly.labels, datasets: [{ data: hourly.values, borderColor: GOLD, backgroundColor: GOLD_A, borderWidth: 2, fill: true, tension: .3, pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: GOLD }] },
+        options: { responsive: true, ...legendOff, interaction: { intersect: false, mode: 'index' }, scales: { x: axisStyle({ maxRotation: 0, autoSkip: true, maxTicksLimit: 12 }), y: axisStyle({ precision: 0 }) } },
+      });
+    }
 
     const c1 = document.getElementById('chart-site-daily');
     if (c1 && window.Chart){
