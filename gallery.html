@@ -173,9 +173,12 @@
   .gallery-section{padding:64px 40px 96px;max-width:1280px;margin:0 auto;}
   .masonry{columns:3;column-gap:16px;}
   .masonry:not(.ready){visibility:hidden;}
-  .photo-card{break-inside:avoid;margin-bottom:16px;position:relative;overflow:hidden;cursor:pointer;border:1px solid var(--line);}
+  .photo-card{
+    break-inside:avoid;margin-bottom:16px;position:relative;overflow:hidden;cursor:pointer;
+    border:1px solid var(--line);aspect-ratio:4/3;background:var(--panel);
+  }
   .photo-card:focus-visible{outline:2px solid var(--rust-hi);outline-offset:2px;}
-  .photo-card img{transition:transform .6s cubic-bezier(.4,0,.2,1);}
+  .photo-card img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.4,0,.2,1);}
   .photo-card:hover img{transform:scale(1.04);}
   .photo-cap{
     position:absolute;bottom:0;left:0;right:0;padding:28px 18px 16px;
@@ -350,6 +353,7 @@
 
 <section class="gallery-section">
   <div class="masonry" id="gallery-grid">
+    <template>
 
     <div class="photo-card" data-album-id="closet-cabinetry" tabindex="0" role="button" aria-label="View Custom Closet Cabinetry photo">
       <img src="images/project-closet.jpg" alt="Custom built-in closet cabinetry with LED lighting and telescoping rods" loading="lazy">
@@ -464,6 +468,7 @@
       <div class="photo-cap"><h2>Custom Church Furniture</h2><span>Cabinet, Pulpit &amp; Altar Pieces</span></div>
     </div>
 
+    </template>
   </div>
 </section>
 
