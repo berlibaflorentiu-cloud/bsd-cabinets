@@ -613,6 +613,91 @@
   }
   @media(max-width:900px){.work-grid{grid-template-columns:1fr;}.work-photo{min-height:380px;}}
 
+  /* ── BEFORE / AFTER ─────────────────────────── */
+  #transformation{
+    padding:104px 0;
+    background:
+      radial-gradient(760px 520px at 18% 30%,rgba(168,185,158,.14),transparent 62%),
+      linear-gradient(145deg,rgba(13,17,16,.96),rgba(28,45,38,.94));
+    border-bottom:1px solid var(--line);
+  }
+  .compare-layout{
+    display:grid;grid-template-columns:minmax(260px,.72fr) minmax(420px,1fr);
+    gap:clamp(36px,6vw,84px);align-items:center;
+  }
+  .compare-copy{max-width:460px;}
+  .compare-copy h2{font-size:clamp(2rem,4vw,3.35rem);margin:18px 0 20px;}
+  .compare-copy > p:not(.eyebrow){color:rgba(244,240,229,.76);max-width:46ch;}
+  .compare-hint{
+    display:flex;align-items:center;gap:12px;margin-top:28px;
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--brass-hi);
+  }
+  .compare-hint::before{content:'↔';font-size:1.1rem;color:var(--sage-hi);}
+  .compare-frame{
+    --compare-position:50%;
+    position:relative;width:min(100%,620px);aspect-ratio:3/4;justify-self:end;
+    overflow:hidden;user-select:none;touch-action:none;cursor:ew-resize;
+    border:1px solid rgba(244,240,229,.18);
+    box-shadow:0 30px 90px rgba(0,0,0,.42);
+    background:#111816;isolation:isolate;
+  }
+  .compare-image,.compare-before{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;
+    pointer-events:none;
+  }
+  .compare-before{
+    z-index:2;clip-path:inset(0 calc(100% - var(--compare-position)) 0 0);
+  }
+  .compare-shade{
+    position:absolute;inset:0;z-index:3;pointer-events:none;
+    background:linear-gradient(90deg,rgba(13,17,16,.08),transparent 22%,transparent 78%,rgba(13,17,16,.08));
+  }
+  .compare-label{
+    position:absolute;top:18px;z-index:5;padding:7px 12px;
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink);box-shadow:0 8px 22px rgba(0,0,0,.2);
+    pointer-events:none;
+  }
+  .compare-label.before{left:18px;background:linear-gradient(180deg,var(--brass-hi),var(--brass));}
+  .compare-label.after{right:18px;background:linear-gradient(180deg,var(--sage-hi),#78907f);}
+  .compare-line{
+    position:absolute;z-index:6;top:0;bottom:0;left:var(--compare-position);width:2px;
+    transform:translateX(-1px);background:rgba(244,240,229,.92);
+    box-shadow:0 0 0 1px rgba(13,17,16,.16),0 0 18px rgba(0,0,0,.28);
+    pointer-events:none;
+  }
+  .compare-handle{
+    position:absolute;z-index:7;left:var(--compare-position);top:50%;
+    width:52px;height:52px;transform:translate(-50%,-50%);
+    display:flex;align-items:center;justify-content:center;gap:7px;
+    border-radius:50%;border:2px solid rgba(244,240,229,.9);
+    color:var(--ink);background:linear-gradient(180deg,var(--brass-hi),var(--brass));
+    box-shadow:0 10px 28px rgba(0,0,0,.38);
+    font-family:'IBM Plex Mono',monospace;font-size:1.35rem;line-height:1;
+    transition:transform 160ms ease,box-shadow 160ms ease;
+  }
+  .compare-frame.dragging .compare-handle,
+  .compare-handle:focus-visible{
+    transform:translate(-50%,-50%) scale(1.1);
+    box-shadow:0 14px 36px rgba(0,0,0,.5),0 0 0 4px rgba(241,215,138,.22);
+    outline:none;
+  }
+  @media(max-width:900px){
+    #transformation{padding:84px 0;}
+    .compare-layout{grid-template-columns:1fr;}
+    .compare-copy{max-width:650px;}
+    .compare-frame{justify-self:center;width:min(100%,560px);}
+  }
+  @media(max-width:560px){
+    #transformation{padding:68px 0;}
+    .compare-frame{width:100%;}
+    .compare-label{top:12px;padding:6px 9px;font-size:.62rem;}
+    .compare-label.before{left:12px;}
+    .compare-label.after{right:12px;}
+    .compare-handle{width:46px;height:46px;}
+  }
+
   /* ── GALLERY ────────────────────────────────── */
   #gallery{background:rgba(10,15,14,.28);border-bottom:1px solid var(--line);}
   .gallery-grid{
@@ -1177,6 +1262,49 @@
   </div>
 </section>
 
+<section id="transformation" aria-labelledby="transformation-title">
+  <div class="wrap compare-layout">
+    <div class="compare-copy reveal">
+      <p class="eyebrow">Before &amp; After</p>
+      <h2 id="transformation-title">See the room change, edge to edge</h2>
+      <p>Drag across the photograph to compare the original bathroom with the finished custom vanity, stone surfaces, tile, lighting, and accessible glass shower.</p>
+      <p class="compare-hint">Drag, tap, or use the arrow keys</p>
+    </div>
+    <div
+      class="compare-frame reveal"
+      data-image-comparison
+      aria-label="Before and after comparison of a primary bathroom remodel"
+    >
+      <img
+        class="compare-image"
+        src="images/projects/primary-bath/03.jpg"
+        alt="Primary bathroom after renovation with gray double vanity, stone surfaces, and glass shower"
+        draggable="false"
+      >
+      <img
+        class="compare-before"
+        src="images/comparison-primary-bath-before.jpg"
+        alt="Primary bathroom before renovation, perspective-aligned with the finished room"
+        draggable="false"
+      >
+      <div class="compare-shade" aria-hidden="true"></div>
+      <span class="compare-label before" aria-hidden="true">Before</span>
+      <span class="compare-label after" aria-hidden="true">After</span>
+      <div class="compare-line" aria-hidden="true"></div>
+      <button
+        class="compare-handle"
+        type="button"
+        role="slider"
+        aria-label="Move the before and after comparison"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="50"
+        aria-valuetext="50 percent before, 50 percent after"
+      ><span aria-hidden="true">‹</span><span aria-hidden="true">›</span></button>
+    </div>
+  </div>
+</section>
+
 <section id="gallery" aria-labelledby="gallery-title">
   <div class="wrap">
     <div class="section-head reveal">
@@ -1500,6 +1628,60 @@
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
   }, {threshold:.15});
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // before / after image comparison
+  document.querySelectorAll('[data-image-comparison]').forEach(frame => {
+    const handle = frame.querySelector('.compare-handle');
+    let position = 50;
+    let dragging = false;
+
+    function setPosition(next){
+      position = Math.max(0, Math.min(100, next));
+      frame.style.setProperty('--compare-position', position + '%');
+      handle.setAttribute('aria-valuenow', String(Math.round(position)));
+      handle.setAttribute(
+        'aria-valuetext',
+        Math.round(position) + ' percent before, ' + Math.round(100 - position) + ' percent after'
+      );
+    }
+
+    function positionFromPointer(clientX){
+      const rect = frame.getBoundingClientRect();
+      setPosition(((clientX - rect.left) / rect.width) * 100);
+    }
+
+    frame.addEventListener('pointerdown', event => {
+      dragging = true;
+      frame.classList.add('dragging');
+      frame.setPointerCapture(event.pointerId);
+      positionFromPointer(event.clientX);
+      handle.focus({preventScroll:true});
+    });
+    frame.addEventListener('pointermove', event => {
+      if (dragging) positionFromPointer(event.clientX);
+    });
+    function stopDragging(event){
+      if (!dragging) return;
+      dragging = false;
+      frame.classList.remove('dragging');
+      if (frame.hasPointerCapture(event.pointerId)) frame.releasePointerCapture(event.pointerId);
+    }
+    frame.addEventListener('pointerup', stopDragging);
+    frame.addEventListener('pointercancel', stopDragging);
+
+    handle.addEventListener('keydown', event => {
+      let next = position;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') next -= 2;
+      else if (event.key === 'ArrowRight' || event.key === 'ArrowUp') next += 2;
+      else if (event.key === 'PageDown') next -= 10;
+      else if (event.key === 'PageUp') next += 10;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = 100;
+      else return;
+      event.preventDefault();
+      setPosition(next);
+    });
+  });
 
   // ── Reviews ──────────────────────────────────
   (function(){

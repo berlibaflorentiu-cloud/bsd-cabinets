@@ -172,6 +172,7 @@
   /* ── MASONRY ─────────────────────────────────── */
   .gallery-section{padding:64px 40px 96px;max-width:1280px;margin:0 auto;}
   .masonry{columns:3;column-gap:16px;}
+  .masonry:not(.ready){visibility:hidden;}
   .photo-card{break-inside:avoid;margin-bottom:16px;position:relative;overflow:hidden;cursor:pointer;border:1px solid var(--line);}
   .photo-card:focus-visible{outline:2px solid var(--rust-hi);outline-offset:2px;}
   .photo-card img{transition:transform .6s cubic-bezier(.4,0,.2,1);}
@@ -188,13 +189,56 @@
   @media(max-width:900px){.masonry{columns:2;}}
   @media(max-width:600px){.masonry{columns:1;}.gallery-section{padding:44px 20px 64px;}.page-header{padding:120px 24px 48px;}}
 
+  /* ── ALBUM BADGES ────────────────────────────── */
+  .card-badges{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;}
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:5px 10px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    border:1px solid rgba(244,240,229,.22);white-space:nowrap;
+  }
+  .badge.ba{background:rgba(168,123,62,.55);color:var(--parchment);border-color:rgba(217,181,109,.5);}
+  .badge.count{background:rgba(13,17,16,.6);color:var(--parchment);margin-left:auto;}
+
+  /* ── LIGHTBOX (album viewer) ────────────────── */
+  #lb-stage{
+    position:relative;display:flex;align-items:center;justify-content:center;
+    max-width:calc(100vw - 160px);max-height:calc(100vh - 190px);min-height:0;
+  }
+  #lightbox.has-film #lb-stage{max-height:calc(100vh - 280px);}
+  #lb-tag{
+    position:absolute;top:10px;left:10px;font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.1em;
+    text-transform:uppercase;padding:6px 14px;color:var(--ink);
+    background:linear-gradient(180deg,var(--brass-hi),var(--brass));display:none;
+  }
+  #lb-tag.show{display:block;}
+  #lb-tag.after{background:linear-gradient(180deg,var(--sage-hi),var(--sage));}
+  #lb-counter{
+    position:absolute;top:10px;right:10px;font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.06em;
+    padding:6px 12px;color:var(--parchment);background:rgba(13,17,16,.6);border:1px solid var(--line);display:none;
+  }
+  #lb-counter.show{display:block;}
+  #lb-film{
+    display:none;gap:8px;margin-top:14px;max-width:calc(100vw - 160px);
+    overflow-x:auto;overflow-y:hidden;padding:2px 2px 8px;align-items:center;
+    scrollbar-width:thin;scrollbar-color:var(--rust) rgba(244,240,229,.08);
+  }
+  #lb-film.show{display:flex;}
+  #lb-film img{
+    width:64px;height:64px;object-fit:cover;flex-shrink:0;cursor:pointer;opacity:.5;
+    border:1px solid transparent;transition:opacity .2s,border-color .2s;
+  }
+  #lb-film img:hover{opacity:.85;}
+  #lb-film img.active{opacity:1;border-color:var(--rust-hi);}
+  #lb-wrap{display:flex;flex-direction:column;align-items:center;max-height:100%;min-height:0;}
+
   /* ── LIGHTBOX ────────────────────────────────── */
   #lightbox{
     display:none;position:fixed;inset:0;z-index:1000;
-    background:rgba(9,7,5,.94);align-items:center;justify-content:center;padding:24px;
+    background:rgba(9,7,5,.94);align-items:center;justify-content:center;
+    padding:76px 80px 104px;
   }
   #lightbox.open{display:flex;}
-  #lb-img{max-width:90vw;max-height:90vh;width:auto;height:auto;object-fit:contain;}
+  #lb-img{max-width:100%;max-height:inherit;width:auto;height:auto;object-fit:contain;}
   #lb-close{
     position:absolute;top:14px;right:16px;color:var(--parchment);font-size:1.7rem;opacity:.7;transition:opacity .2s;
     display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;
@@ -213,7 +257,16 @@
     font-family:'IBM Plex Mono',monospace;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;
     color:var(--parchment);white-space:nowrap;
   }
-  #lb-cap span{color:rgba(244,240,229,.55);font-family:'IBM Plex Sans',sans-serif;font-size:.78rem;text-transform:none;letter-spacing:0;display:block;margin-top:4px;}
+  #lb-title{display:block;}
+  #lb-sub{color:rgba(244,240,229,.55);font-family:'IBM Plex Sans',sans-serif;font-size:.78rem;text-transform:none;letter-spacing:0;display:block;margin-top:4px;}
+  @media(max-width:700px){
+    #lightbox{padding:68px 50px 98px;}
+    #lb-stage{max-width:calc(100vw - 100px);max-height:calc(100vh - 174px);}
+    #lightbox.has-film #lb-stage{max-height:calc(100vh - 264px);}
+    #lb-film{max-width:calc(100vw - 100px);}
+    #lb-prev{left:2px;}
+    #lb-next{right:2px;}
+  }
 
   /* ── CTA STRIP ───────────────────────────────── */
   .cta-strip{background:linear-gradient(120deg,#1F3B32,#101615 82%);padding:64px 40px;text-align:center;}
@@ -298,39 +351,117 @@
 <section class="gallery-section">
   <div class="masonry" id="gallery-grid">
 
-    <div class="photo-card" data-title="Custom Closet Cabinetry" data-sub="Built-In Storage &amp; LED Lighting" tabindex="0" role="button" aria-label="View Custom Closet Cabinetry photo">
+    <div class="photo-card" data-album-id="closet-cabinetry" tabindex="0" role="button" aria-label="View Custom Closet Cabinetry photo">
       <img src="images/project-closet.jpg" alt="Custom built-in closet cabinetry with LED lighting and telescoping rods" loading="lazy">
       <div class="photo-cap"><h2>Custom Closet Cabinetry</h2><span>Built-In Storage &amp; LED Lighting</span></div>
     </div>
 
-    <div class="photo-card" data-title="Custom Fireplace Surround" data-sub="Millwork &amp; Marble Tile" tabindex="0" role="button" aria-label="View Custom Fireplace Surround photo">
+    <div class="photo-card" data-album-id="primary-bath" tabindex="0" role="button" aria-label="View Primary Bathroom Remodel album">
+      <img src="images/projects/primary-bath/08.jpg" alt="Primary bathroom remodel with double vanity and glass shower" loading="lazy">
+      <div class="card-badges"><span class="badge ba">Before &amp; After</span><span class="badge count">14 photos</span></div>
+      <div class="photo-cap"><h2>Primary Bathroom Remodel</h2><span>Full Gut Renovation</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="fireplace-surround" tabindex="0" role="button" aria-label="View Custom Fireplace Surround photo">
       <img src="images/project-fireplace.jpg" alt="Custom fireplace surround with marble tile and millwork" loading="lazy">
       <div class="photo-cap"><h2>Custom Fireplace Surround</h2><span>Millwork &amp; Marble Tile</span></div>
     </div>
 
-    <div class="photo-card" data-title="Kitchen Remodel" data-sub="Custom Cabinetry &amp; Stone" tabindex="0" role="button" aria-label="View Kitchen Remodel photo">
+    <div class="photo-card" data-album-id="sage-kitchen" tabindex="0" role="button" aria-label="View Sage Green Kitchen &amp; Breakfast Nook album">
+      <img src="images/projects/sage-kitchen/03.jpg" alt="Sage green custom kitchen with marble waterfall island" loading="lazy">
+      <div class="card-badges"><span></span><span class="badge count">11 photos</span></div>
+      <div class="photo-cap"><h2>Sage Green Kitchen &amp; Breakfast Nook</h2><span>Full Custom Kitchen Build</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="kitchen-remodel-1" tabindex="0" role="button" aria-label="View Kitchen Remodel photo">
       <img src="images/about-kitchen.jpg" alt="Kitchen remodel with custom cabinetry and white island" loading="lazy">
       <div class="photo-cap"><h2>Kitchen Remodel</h2><span>Custom Cabinetry &amp; Stone</span></div>
     </div>
 
-    <div class="photo-card" data-title="Hickory Vanity Cabinets" data-sub="Custom Cabinetry" tabindex="0" role="button" aria-label="View Hickory Vanity Cabinets photo">
+    <div class="photo-card" data-album-id="garage-cabinets" tabindex="0" role="button" aria-label="View Garage Storage Cabinets album">
+      <img src="images/projects/garage-cabinets/02.jpg" alt="Garage storage cabinets, white finish" loading="lazy">
+      <div class="card-badges"><span class="badge ba">Before &amp; After</span><span class="badge count">4 photos</span></div>
+      <div class="photo-cap"><h2>Garage Storage Cabinets</h2><span>Before &amp; After</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="hickory-vanity" tabindex="0" role="button" aria-label="View Hickory Vanity Cabinets photo">
       <img src="images/project-cabinetry.jpg" alt="Solid hickory custom vanity cabinets built in workshop" loading="lazy">
       <div class="photo-cap"><h2>Hickory Vanity Cabinets</h2><span>Custom Cabinetry</span></div>
     </div>
 
-    <div class="photo-card" data-title="Kitchen Remodel" data-sub="Custom Cabinetry &amp; Butcher Block" tabindex="0" role="button" aria-label="View Kitchen Remodel photo">
+    <div class="photo-card" data-album-id="waterfall-kitchen" tabindex="0" role="button" aria-label="View Kitchen Remodel — Waterfall Island album">
+      <img src="images/projects/waterfall-kitchen/04.jpg" alt="Modern kitchen remodel with white oak cabinetry and waterfall island" loading="lazy">
+      <div class="card-badges"><span class="badge ba">Before &amp; After</span><span class="badge count">9 photos</span></div>
+      <div class="photo-cap"><h2>Kitchen Remodel — Waterfall Island</h2><span>Full Custom Kitchen Build</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="powder-room-remodel" tabindex="0" role="button" aria-label="View Powder Room Remodel album">
+      <img src="images/projects/powder-room-remodel/01.jpg" alt="Powder room with vessel sink and patterned tile floor" loading="lazy">
+      <div class="card-badges"><span class="badge ba">Before &amp; After</span><span class="badge count">6 photos</span></div>
+      <div class="photo-cap"><h2>Powder Room Remodel</h2><span>Vessel Sink Vanity</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="kitchen-remodel-2" tabindex="0" role="button" aria-label="View Kitchen Remodel photo">
       <img src="images/project-kitchen-2.jpg" alt="Kitchen remodel with cabinetry and butcher block island" loading="lazy">
       <div class="photo-cap"><h2>Kitchen Remodel</h2><span>Custom Cabinetry &amp; Butcher Block</span></div>
     </div>
 
-    <div class="photo-card" data-title="Granite Dining Table" data-sub="Stone &amp; Countertops" tabindex="0" role="button" aria-label="View Granite Dining Table photo">
+    <div class="photo-card" data-album-id="builtin-vanity-nook" tabindex="0" role="button" aria-label="View Built-In Vanity &amp; Shelving Nook album">
+      <img src="images/projects/builtin-vanity-nook/01.jpg" alt="Built-in vanity desk with open shelving" loading="lazy">
+      <div class="card-badges"><span></span><span class="badge count">3 photos</span></div>
+      <div class="photo-cap"><h2>Built-In Vanity &amp; Shelving Nook</h2><span>Custom Millwork</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="staircase" tabindex="0" role="button" aria-label="View Staircase Renovation album">
+      <img src="images/projects/staircase/01.jpg" alt="Staircase with custom risers and hardwood treads" loading="lazy">
+      <div class="card-badges"><span></span><span class="badge count">3 photos</span></div>
+      <div class="photo-cap"><h2>Staircase Renovation</h2><span>Custom Risers &amp; Hardwood Treads</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="granite-table" tabindex="0" role="button" aria-label="View Granite Dining Table photo">
       <img src="images/project-countertop.jpg" alt="Custom granite dining table" loading="lazy">
       <div class="photo-cap"><h2>Granite Dining Table</h2><span>Stone &amp; Countertops</span></div>
     </div>
 
-    <div class="photo-card" data-title="Deep Green Kitchen Package" data-sub="Full Custom Build" tabindex="0" role="button" aria-label="View Deep Green Kitchen Package photo">
+    <div class="photo-card" data-album-id="green-kitchen" tabindex="0" role="button" aria-label="View Deep Green Kitchen Package photo">
       <img src="images/GreenKitchen.JPG" alt="Deep green custom kitchen cabinetry with lit upper cabinets" loading="lazy">
       <div class="photo-cap"><h2>Deep Green Kitchen Package</h2><span>Full Custom Build</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="builtin-bar-nook" tabindex="0" role="button" aria-label="View Built-In Bar Nook album">
+      <img src="images/projects/builtin-bar-nook/03.jpg" alt="Built-in bar nook with glass-front cabinetry" loading="lazy">
+      <div class="card-badges"><span class="badge ba">Before &amp; After</span><span class="badge count">4 photos</span></div>
+      <div class="photo-cap"><h2>Built-In Bar Nook</h2><span>Custom Millwork</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="accessible-shower" tabindex="0" role="button" aria-label="View Accessible Roll-In Shower album">
+      <img src="images/projects/accessible-shower/02.jpg" alt="Accessible roll-in shower with brass fixtures and grab bars" loading="lazy">
+      <div class="card-badges"><span></span><span class="badge count">5 photos</span></div>
+      <div class="photo-cap"><h2>Accessible Roll-In Shower</h2><span>Brass Fixtures &amp; Grab Bars</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="cream-kitchen-dual-oven" tabindex="0" role="button" aria-label="View Kitchen Remodel — Dual Ovens album">
+      <img src="images/projects/cream-kitchen-dual-oven/02.jpg" alt="Cream kitchen with glass-front uppers and dual wall ovens" loading="lazy">
+      <div class="card-badges"><span></span><span class="badge count">5 photos</span></div>
+      <div class="photo-cap"><h2>Kitchen Remodel — Dual Ovens</h2><span>Custom Cabinetry &amp; Stone</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="kitchen-inprogress-graystone" tabindex="0" role="button" aria-label="View Kitchen Remodel In Progress album">
+      <img src="images/projects/kitchen-inprogress-graystone/01.jpg" alt="Kitchen remodel in progress with white shaker cabinets and black granite" loading="lazy">
+      <div class="card-badges"><span></span><span class="badge count">2 photos</span></div>
+      <div class="photo-cap"><h2>Kitchen Remodel, In Progress</h2><span>White Shaker &amp; Black Granite</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="aframe-cabin-remodel" tabindex="0" role="button" aria-label="View A-Frame Cabin Remodel album">
+      <img src="images/projects/aframe-cabin-remodel/08.jpg" alt="A-frame cabin kitchen remodel with white cabinetry" loading="lazy">
+      <div class="card-badges"><span class="badge ba">Before &amp; After</span><span class="badge count">17 photos</span></div>
+      <div class="photo-cap"><h2>A-Frame Cabin Remodel</h2><span>Kitchen, Stairs, Bedroom &amp; Closets</span></div>
+    </div>
+
+    <div class="photo-card" data-album-id="church-furniture" tabindex="0" role="button" aria-label="View Custom Church Furniture album">
+      <img src="images/projects/church-furniture/03.jpg" alt="Custom-built church china cabinet with glass doors" loading="lazy">
+      <div class="card-badges"><span></span><span class="badge count">10 photos</span></div>
+      <div class="photo-cap"><h2>Custom Church Furniture</h2><span>Cabinet, Pulpit &amp; Altar Pieces</span></div>
     </div>
 
   </div>
@@ -363,9 +494,16 @@
 <div id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
   <button id="lb-close" aria-label="Close">&#x2715;</button>
   <button id="lb-prev" aria-label="Previous image">&#8249;</button>
-  <img id="lb-img" src="" alt="">
+  <div id="lb-wrap">
+    <div id="lb-stage">
+      <img id="lb-img" src="" alt="">
+      <span id="lb-tag"></span>
+      <span id="lb-counter"></span>
+    </div>
+    <div id="lb-film"></div>
+  </div>
   <button id="lb-next" aria-label="Next image">&#8250;</button>
-  <div id="lb-cap"><span id="lb-sub"></span></div>
+  <div id="lb-cap"><span id="lb-title"></span><span id="lb-sub"></span></div>
 </div>
 
 <script>
@@ -407,26 +545,310 @@
     });
   });
 
+  // Legacy single-photo entries (no project subfolder — one image each)
+  const LEGACY = {
+    'closet-cabinetry':      {title:'Custom Closet Cabinetry',      subtitle:'Built-In Storage &amp; LED Lighting',       src:'images/project-closet.jpg',     alt:'Custom built-in closet cabinetry with LED lighting and telescoping rods'},
+    'fireplace-surround':    {title:'Custom Fireplace Surround',    subtitle:'Millwork &amp; Marble Tile',                src:'images/project-fireplace.jpg',  alt:'Custom fireplace surround with marble tile and millwork'},
+    'kitchen-remodel-1':     {title:'Kitchen Remodel',              subtitle:'Custom Cabinetry &amp; Stone',              src:'images/about-kitchen.jpg',      alt:'Kitchen remodel with custom cabinetry and white island'},
+    'hickory-vanity':        {title:'Hickory Vanity Cabinets',      subtitle:'Custom Cabinetry',                          src:'images/project-cabinetry.jpg',  alt:'Solid hickory custom vanity cabinets built in workshop'},
+    'kitchen-remodel-2':     {title:'Kitchen Remodel',              subtitle:'Custom Cabinetry &amp; Butcher Block',      src:'images/project-kitchen-2.jpg',  alt:'Kitchen remodel with cabinetry and butcher block island'},
+    'granite-table':         {title:'Granite Dining Table',         subtitle:'Stone &amp; Countertops',                   src:'images/project-countertop.jpg', alt:'Custom granite dining table'},
+    'green-kitchen':         {title:'Deep Green Kitchen Package',   subtitle:'Full Custom Build',                         src:'images/GreenKitchen.JPG',       alt:'Deep green custom kitchen cabinetry with lit upper cabinets'},
+  };
+
+  // Project albums — grouped photos from the same job, in display order.
+  // label: 'before' | 'after' | null
+  const ALBUMS = {
+    'primary-bath': {
+      title:'Primary Bathroom Remodel', subtitle:'Full Gut Renovation',
+      images:[
+        {n:1,label:'before'},{n:2,label:'before'},{n:3,label:'before'},{n:4,label:'before'},{n:5,label:'before'},{n:6,label:'before'},{n:7,label:'before'},
+        {n:8,label:'after'},{n:9,label:'after'},{n:10,label:'after'},{n:11,label:'after'},{n:12,label:'after'},{n:13,label:'after'},{n:14,label:'after'},
+      ]
+    },
+    'sage-kitchen': {
+      title:'Sage Green Kitchen &amp; Breakfast Nook', subtitle:'Full Custom Kitchen Build',
+      images:Array.from({length:11},(_,i)=>({n:i+1,label:null}))
+    },
+    'waterfall-kitchen': {
+      title:'Kitchen Remodel — Waterfall Island', subtitle:'Full Custom Kitchen Build',
+      images:[
+        {n:1,label:'before'},{n:2,label:'before'},{n:3,label:'before'},
+        {n:4,label:'after'},{n:5,label:'after'},{n:6,label:'after'},{n:7,label:'after'},{n:8,label:'after'},{n:9,label:'after'},
+      ]
+    },
+    'powder-room-remodel': {
+      title:'Powder Room Remodel', subtitle:'Vessel Sink Vanity',
+      images:[{n:1,label:'before'},{n:2,label:'before'},{n:3,label:'after'},{n:4,label:'after'},{n:5,label:'after'},{n:6,label:'after'}]
+    },
+    'builtin-vanity-nook': {
+      title:'Built-In Vanity &amp; Shelving Nook', subtitle:'Custom Millwork',
+      images:Array.from({length:3},(_,i)=>({n:i+1,label:null}))
+    },
+    'staircase': {
+      title:'Staircase Renovation', subtitle:'Custom Risers &amp; Hardwood Treads',
+      images:Array.from({length:3},(_,i)=>({n:i+1,label:null}))
+    },
+    'garage-cabinets': {
+      title:'Garage Storage Cabinets', subtitle:'Before &amp; After',
+      images:[{n:1,label:'before'},{n:2,label:'after'},{n:3,label:'after'},{n:4,label:'after'}]
+    },
+    'builtin-bar-nook': {
+      title:'Built-In Bar Nook', subtitle:'Custom Millwork',
+      images:[{n:1,label:'before'},{n:2,label:'before'},{n:3,label:'after'},{n:4,label:'after'}]
+    },
+    'accessible-shower': {
+      title:'Accessible Roll-In Shower', subtitle:'Brass Fixtures &amp; Grab Bars',
+      images:Array.from({length:5},(_,i)=>({n:i+1,label:null}))
+    },
+    'cream-kitchen-dual-oven': {
+      title:'Kitchen Remodel — Dual Ovens', subtitle:'Custom Cabinetry &amp; Stone',
+      images:Array.from({length:5},(_,i)=>({n:i+1,label:null}))
+    },
+    'kitchen-inprogress-graystone': {
+      title:'Kitchen Remodel, In Progress', subtitle:'White Shaker &amp; Black Granite',
+      images:Array.from({length:2},(_,i)=>({n:i+1,label:null}))
+    },
+    'aframe-cabin-remodel': {
+      title:'A-Frame Cabin Remodel', subtitle:'Kitchen, Stairs, Bedroom &amp; Closets',
+      images:[
+        {n:1,label:'before'},{n:2,label:'before'},{n:3,label:'before'},{n:4,label:'before'},{n:5,label:'before'},{n:6,label:'before'},{n:7,label:'before'},
+        {n:8,label:'after'},{n:9,label:'after'},{n:10,label:'after'},{n:11,label:'after'},{n:12,label:'after'},{n:13,label:'after'},{n:14,label:'after'},{n:15,label:'after'},{n:16,label:'after'},{n:17,label:'after'},
+      ]
+    },
+    'church-furniture': {
+      title:'Custom Church Furniture', subtitle:'Cabinet, Pulpit &amp; Altar Pieces',
+      images:Array.from({length:10},(_,i)=>({n:i+1,label:null}))
+    },
+  };
+
+  // Resolve every album/legacy entry into a flat {title, subtitle, images:[{src,alt,label}]} shape
+  const ENTRIES = {};
+  Object.keys(LEGACY).forEach(id => {
+    const l = LEGACY[id];
+    ENTRIES[id] = {title:l.title, subtitle:l.subtitle, images:[{src:l.src, alt:l.alt, label:null}]};
+  });
+  Object.keys(ALBUMS).forEach(id => {
+    const a = ALBUMS[id];
+    ENTRIES[id] = {
+      title:a.title, subtitle:a.subtitle,
+      images:a.images.map(im => ({
+        src:`images/projects/${id}/${String(im.n).padStart(2,'0')}.jpg`,
+        alt:`${a.title}${im.label ? ' — ' + im.label : ''}`,
+        label:im.label
+      }))
+    };
+  });
+
+  // Current grouped project library imported from the owner's curated photo folders.
+  // Each row is [folder, title, subtitle, photo count, before count, after count].
+  const PROJECT_DATA = [
+    ["beautiful-bath","Beautiful Accessible Bath","Barrier-Free Shower & Brass Details",4,0,0],
+    ["gray-kitchen-remodel","Gray Kitchen Remodel","Full Cabinetry Transformation",5,3,2],
+    ["cabinet-refacing","Warm Wood Cabinet Refacing","Flat-Panel Cabinetry",2,0,0],
+    ["white-waterfall-kitchen","White Waterfall Kitchen","Custom Cabinetry & Island",4,0,0],
+    ["bright-shaker-kitchen","Bright Shaker Kitchen","Custom Cabinetry & Stone",1,0,0],
+    ["custom-range-hood","Custom Range Hood","Natural Wood Cabinetry",4,0,0],
+    ["built-in-desk","Built-In Desk & Bookcases","Custom Home Office Millwork",3,0,0],
+    ["white-walk-in-closet","White Walk-In Closet","Custom Storage & Dressing Bench",3,0,0],
+    ["gray-dressing-room","Gray Dressing Room","Full-Height Wardrobes & Built-In Desk",3,0,0],
+    ["warm-gray-kitchen","Warm Gray Kitchen","Kitchen & Island Cabinetry",6,0,0],
+    ["laundry-cabinetry","Laundry Room Cabinetry","Vanilla Oak Flat Panels",1,0,0],
+    ["walnut-bath","Walnut Bathroom Cabinetry","Floating Vanity & Wall Cabinet",3,0,0],
+    ["built-in-vanity-nook","Built-In Vanity Nook","Desk, Drawers & Open Shelving",4,0,0],
+    ["natural-wood-bath","Natural Wood Bathroom Cabinets","Custom Vanity & Wall Cabinet",3,0,0],
+    ["compact-bath","Compact Bathroom Remodel","Vanity, Tile & Glass Shower",4,0,0],
+    ["under-stairs-builtins","Under-Stairs Built-Ins","Space-Saving Custom Cabinetry",4,0,0],
+    ["powder-room-remodel","Powder Room Remodel","Floating Vanity & Vessel Sink",4,0,0],
+    ["primary-bath","Primary Bathroom Remodel","Full Before & After Renovation",11,0,0],
+    ["oak-to-two-tone-kitchen","Two-Tone Kitchen Remodel","Full Before & After Transformation",8,5,3],
+    ["lighted-display-cabinet","Lighted Display Cabinet","Custom Glass-Front Furniture",4,0,0],
+    ["classic-white-kitchen","Classic White Kitchen","Custom Cabinetry & Dark Stone",2,0,0],
+    ["aframe-cabin-remodel","Lake Tahoe A-Frame Remodel","Kitchen, Bath, Bedroom & Built-Ins",20,12,8],
+    ["church-furniture","Custom Church Furniture","Lectern, Altar & Liturgical Pieces",4,0,0],
+    ["white-gloss-vanity","White Gloss Vanity","Push-to-Open Flat-Panel Drawers",3,0,0],
+    ["white-gloss-closet","White Gloss Walk-In Closet","Custom Shelving & Drawers",3,0,0],
+    ["rustic-wood-bath","Rustic Wood Bathroom","Custom Vanity & Walk-In Shower",9,0,0],
+    ["galley-kitchen","Galley Kitchen","Light Wood Cabinetry",3,0,0],
+    ["vanilla-oak-kitchen","Vanilla Oak Kitchen","Flat-Panel Cabinetry",4,0,0],
+    ["garage-cabinets","Garage Storage Cabinets","Before & After",4,0,0],
+    ["open-plan-kitchen","Open-Plan Kitchen","Custom Cabinetry & Oversized Island",3,0,0],
+    ["kitchen-dining-builtins","Kitchen & Dining Built-Ins","Custom Kitchen, Island & Library Wall",12,0,0],
+    ["modern-tv-wall","Modern TV Feature Wall","Slat Panel & Floating Hearth",3,0,0],
+    ["accessible-shower","Accessible Bathroom Remodel","Roll-In Shower & Custom Vanity",5,0,0],
+    ["wooden-kitchen-remodel","Warm Wood Kitchen Remodel","Custom Cabinetry & Beverage Center",6,0,0],
+    ["dark-wood-walk-in","Dark Wood Walk-In Closet","Custom Shelving & Integrated Ironing Board",4,0,0],
+    ["custom-double-vanity","Custom Double Vanity","Natural Wood Cabinetry",3,0,0],
+    ["green-kitchen","Deep Green Kitchen","Full Custom Cabinetry Build",6,0,0],
+    ["staircase","Staircase Renovation","Hardwood Treads & Custom Risers",3,0,0],
+    ["white-shaker-kitchen","White Shaker Kitchen","Custom Cabinets & Dark Countertops",5,0,0],
+    ["freestanding-display-cabinet","Freestanding Display Cabinet","Glass Doors & Drawer Storage",1,0,0],
+    ["gray-display-cabinet","Gray Display Cabinet","Glass-Front Custom Furniture",1,0,0],
+    ["floating-wood-vanity","Floating Wood Vanity","Custom Bathroom Cabinetry",1,0,0],
+    ["gray-vanity-nook","Gray Vanity Nook","Custom Cabinetry",1,0,0],
+    ["gray-island-kitchen","Gray Island Kitchen","Custom Cabinetry & Stone",1,0,0],
+  ];
+
+  const customLabels = {
+    "primary-bath": {before:[5,6,7,8,9,10,11], after:[1,2,3,4]},
+    "oak-to-two-tone-kitchen": {before:[4,5,6,7,8], after:[1,2,3]},
+    "built-in-vanity-nook": {before:[1,2], after:[3,4]},
+    "powder-room-remodel": {before:[1,2], after:[3,4]},
+    "aframe-cabin-remodel": {before:[2,9,10,11,12,13,14,15,16,17,18,19,20], after:[1,3,4,5,6,7,8]},
+    "green-kitchen": {before:[1], after:[2,3,4,5,6]},
+    "garage-cabinets": {before:[4], after:[1,2,3]}
+  };
+  const customOrder = {
+    "under-stairs-builtins": [3,2,4,1],
+    "vanilla-oak-kitchen": [4,1,2,3],
+    "accessible-shower": [1,3,2,4,5],
+    "kitchen-dining-builtins": [2,3,4,5,6,7,8,9,10,11,12],
+    "wooden-kitchen-remodel": [1,2,4]
+  };
+  const customCover = {
+    "vanilla-oak-kitchen": 4,
+    "kitchen-dining-builtins": 2,
+    "green-kitchen": 1
+  };
+  const galleryGrid = document.getElementById('gallery-grid');
+  galleryGrid.innerHTML = '';
+  PROJECT_DATA.forEach(([id,title,subtitle,count,beforeCount,afterCount]) => {
+    const labels = customLabels[id];
+    const images = Array.from({length:count}, (_,i) => {
+      const n = i + 1;
+      let label = n <= beforeCount ? 'before' : n <= beforeCount + afterCount ? 'after' : null;
+      if (labels) label = labels.before.includes(n) ? 'before' : labels.after.includes(n) ? 'after' : null;
+      return {
+        src:`images/projects/${id}/${String(n).padStart(2,'0')}.jpg`,
+        alt:`${title}${label ? ' — ' + label : ''}`,
+        label
+      };
+    });
+    const order = customOrder[id];
+    const orderedImages = order ? order.map(n => images[n - 1]) : images;
+    const albumImages = [
+      ...orderedImages.filter(image => image.label === 'before'),
+      ...orderedImages.filter(image => image.label !== 'before')
+    ];
+    const displayedCount = albumImages.length;
+    ENTRIES[id] = {title,subtitle,images:albumImages};
+    const hasStages = beforeCount + afterCount > 0 || labels || /Before & After/i.test(subtitle);
+    const coverIndex = images.findIndex(image => image.label === 'after');
+    const cover = customCover[id]
+      ? images[customCover[id] - 1]
+      : images[coverIndex >= 0 ? coverIndex : 0];
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+    card.dataset.albumId = id;
+    card.tabIndex = 0;
+    card.setAttribute('role','button');
+    card.setAttribute('aria-label',`View ${title}${displayedCount > 1 ? ' album' : ' photo'}`);
+    card.innerHTML = `
+      <img src="${cover.src}" alt="${cover.alt}" loading="lazy">
+      ${displayedCount > 1 ? `<div class="card-badges">${hasStages ? '<span class="badge ba">Before &amp; After</span>' : '<span></span>'}<span class="badge count">${displayedCount} photos</span></div>` : ''}
+      <div class="photo-cap"><h2>${title}</h2><span>${subtitle}</span></div>`;
+    galleryGrid.appendChild(card);
+  });
+
+  // Preserve original one-off portfolio pieces that do not collide with a new grouped project.
+  [
+    'closet-cabinetry',
+    'fireplace-surround',
+    'kitchen-remodel-1',
+    'hickory-vanity',
+    'kitchen-remodel-2',
+    'granite-table'
+  ].forEach(id => {
+    const entry = ENTRIES[id];
+    const image = entry.images[0];
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+    card.dataset.albumId = id;
+    card.tabIndex = 0;
+    card.setAttribute('role','button');
+    card.setAttribute('aria-label',`View ${entry.title} photo`);
+    card.innerHTML = `
+      <img src="${image.src}" alt="${image.alt}" loading="lazy">
+      <div class="photo-cap"><h2>${entry.title}</h2><span>${entry.subtitle}</span></div>`;
+    galleryGrid.appendChild(card);
+  });
+  galleryGrid.classList.add('ready');
+
   const cards = Array.from(document.querySelectorAll('.photo-card'));
   const lb = document.getElementById('lightbox');
   const lbImg = document.getElementById('lb-img');
-  const lbCap = document.getElementById('lb-cap');
+  const lbTag = document.getElementById('lb-tag');
+  const lbCounter = document.getElementById('lb-counter');
+  const lbFilm = document.getElementById('lb-film');
+  const lbTitle = document.getElementById('lb-title');
   const lbSub = document.getElementById('lb-sub');
   const lbClose = document.getElementById('lb-close');
   const lbPrev = document.getElementById('lb-prev');
   const lbNext = document.getElementById('lb-next');
-  let current = 0;
+  let currentEntry = null;
+  let currentIndex = 0;
   let lbTrigger = null;
   const lbFocusable = [lbClose, lbPrev, lbNext];
 
-  function openLb(index){
-    current = index;
-    const card = cards[current];
-    const img = card.querySelector('img');
-    lbImg.src = img.src;
-    lbImg.alt = img.alt;
-    lbCap.firstChild.nodeValue = card.dataset.title || '';
-    lbSub.textContent = card.dataset.sub || '';
+  function renderFrame(){
+    const images = currentEntry.images;
+    const im = images[currentIndex];
+    lbImg.src = im.src;
+    lbImg.alt = im.alt;
+    lbTitle.textContent = currentEntry.title.replace(/&amp;/g,'&') || '';
+    lbSub.textContent = currentEntry.subtitle.replace(/&amp;/g,'&') || '';
+
+    if (im.label){
+      lbTag.textContent = im.label === 'before' ? 'Before' : 'After';
+      lbTag.className = im.label === 'after' ? 'show after' : 'show';
+    } else {
+      lbTag.className = '';
+    }
+
+    if (images.length > 1){
+      lb.classList.add('has-film');
+      lbCounter.textContent = `${currentIndex + 1} / ${images.length}`;
+      lbCounter.classList.add('show');
+      lbPrev.style.display = '';
+      lbNext.style.display = '';
+    } else {
+      lb.classList.remove('has-film');
+      lbCounter.classList.remove('show');
+      lbPrev.style.display = 'none';
+      lbNext.style.display = 'none';
+    }
+
+    if (images.length > 1){
+      lbFilm.classList.add('show');
+      lbFilm.innerHTML = '';
+      images.forEach((fim, i) => {
+        const t = document.createElement('img');
+        t.src = fim.src;
+        t.alt = '';
+        t.loading = 'lazy';
+        if (i === currentIndex) t.classList.add('active');
+        t.addEventListener('click', () => { currentIndex = i; renderFrame(); });
+        lbFilm.appendChild(t);
+      });
+      const activeThumb = lbFilm.querySelector('.active');
+      if (activeThumb){
+        lbFilm.scrollTo({
+          left:activeThumb.offsetLeft - (lbFilm.clientWidth - activeThumb.offsetWidth) / 2,
+          behavior:'smooth'
+        });
+      }
+    } else {
+      lbFilm.classList.remove('show');
+      lbFilm.innerHTML = '';
+    }
+  }
+
+  function openLb(albumId){
+    const entry = ENTRIES[albumId];
+    if (!entry) return;
+    currentEntry = entry;
+    currentIndex = 0;
+    renderFrame();
     if (!lb.classList.contains('open')) lbTrigger = document.activeElement;
     lb.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -439,21 +861,28 @@
     if (lbTrigger && typeof lbTrigger.focus === 'function') lbTrigger.focus();
     lbTrigger = null;
   }
-  cards.forEach((card, i) => {
-    card.addEventListener('click', () => openLb(i));
+  function step(delta){
+    if (!currentEntry) return;
+    const len = currentEntry.images.length;
+    currentIndex = (currentIndex + delta + len) % len;
+    renderFrame();
+  }
+  cards.forEach(card => {
+    const id = card.dataset.albumId;
+    card.addEventListener('click', () => openLb(id));
     card.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openLb(i); }
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openLb(id); }
     });
   });
   lbClose.addEventListener('click', closeLb);
-  lbPrev.addEventListener('click', () => openLb((current - 1 + cards.length) % cards.length));
-  lbNext.addEventListener('click', () => openLb((current + 1) % cards.length));
+  lbPrev.addEventListener('click', () => step(-1));
+  lbNext.addEventListener('click', () => step(1));
   lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
   document.addEventListener('keydown', e => {
     if (!lb.classList.contains('open')) return;
     if (e.key === 'Escape') closeLb();
-    if (e.key === 'ArrowLeft') openLb((current - 1 + cards.length) % cards.length);
-    if (e.key === 'ArrowRight') openLb((current + 1) % cards.length);
+    if (e.key === 'ArrowLeft') step(-1);
+    if (e.key === 'ArrowRight') step(1);
     if (e.key === 'Tab'){
       // trap focus inside the lightbox's controls while it's open
       const i = lbFocusable.indexOf(document.activeElement);
