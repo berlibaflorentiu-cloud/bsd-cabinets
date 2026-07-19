@@ -708,6 +708,8 @@
   .gimg{position:absolute;inset:0;transition:transform .7s cubic-bezier(.4,0,.2,1);}
   .gallery-item:hover .gimg{transform:scale(1.05);}
   .gimg img{width:100%;height:100%;object-fit:cover;display:block;}
+  .gallery-item.gallery-contain .gimg{background:#b8aa96;}
+  .gallery-item.gallery-contain .gimg img{object-fit:contain;object-position:center;}
   .gcap{
     position:absolute;bottom:0;left:0;right:0;
     padding:20px 24px 16px;
@@ -1314,20 +1316,16 @@
     </div>
     <div class="gallery-grid reveal">
       <div class="gallery-item">
-        <div class="gimg"><img src="images/about-kitchen.jpg" alt="Kitchen remodel with custom cabinetry and white island"></div>
-        <div class="gcap"><h3>Kitchen Remodel</h3><span>Cabinetry &amp; Stone</span></div>
+        <div class="gimg"><img src="images/home-gallery-waterfall-kitchen.jpg" alt="White and sage custom kitchen with waterfall peninsula and brass pendant lights" style="object-position:center 52%"></div>
+        <div class="gcap"><h3>Waterfall Kitchen</h3><span>Custom Cabinetry &amp; Stone</span></div>
       </div>
       <div class="gallery-item">
-        <div class="gimg"><img src="images/project-cabinetry.jpg" alt="Solid hickory custom vanity cabinets built in workshop"></div>
-        <div class="gcap"><h3>Hickory Vanity Cabinets</h3><span>Custom Cabinetry</span></div>
+        <div class="gimg"><img src="images/home-gallery-shaker-island.jpg" alt="Large white shaker kitchen with full-height cabinetry and central island" style="object-position:center 55%"></div>
+        <div class="gcap"><h3>Shaker Kitchen &amp; Island</h3><span>Full Custom Kitchen</span></div>
       </div>
-      <div class="gallery-item">
-        <div class="gimg"><img src="images/project-fireplace.jpg" alt="Custom fireplace surround with marble tile and millwork" style="object-position:center 85%"></div>
-        <div class="gcap"><h3>Custom Fireplace Surround</h3><span>Millwork &amp; Marble Tile</span></div>
-      </div>
-      <div class="gallery-item">
-        <div class="gimg"><img src="images/project-kitchen-2.jpg" alt="Kitchen remodel with cabinetry and butcher block island"></div>
-        <div class="gcap"><h3>Kitchen Remodel</h3><span>Cabinetry &amp; Butcher Block</span></div>
+      <div class="gallery-item gallery-contain">
+        <div class="gimg"><img src="images/home-gallery-built-in.jpg" alt="Taupe built-in display cabinet with glass doors and matching base cabinetry"></div>
+        <div class="gcap"><h3>Built-In Display Cabinet</h3><span>Glass-Front Cabinetry</span></div>
       </div>
     </div>
     <div class="gallery-cta">
